@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api', // Adjust if backend port differs
+    baseURL: 'https://college-timetable-management-system-9j8k9hwju-balaks-projects.vercel.app/api', // Adjust if backend port differs
 });
 
 // Add a request interceptor to include the token
