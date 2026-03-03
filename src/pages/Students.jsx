@@ -280,7 +280,7 @@ export default function Students() {
                                 ) : filtered.length > 0 ? (
                                     filtered.map((s, index) => (
                                         <tr key={s.id} className="group hover:bg-gray-50/50 transition-colors">
-                                            <td className="px-8 py-6 text-sm font-bold text-gray-400 tabular-nums">{index + 1}</td>
+                                            <td className="px-8 py-6 text-sm font-bold text-gray-400 tabular-nums">{s.serialNo || index + 1}</td>
                                             <td className="px-8 py-6 font-display font-black text-gray-900">{s.rollNumber}</td>
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-3">

@@ -11,6 +11,7 @@ const FacultyManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [previewImage, setPreviewImage] = useState(null);
 
     // User role check (Mock - in real app get from AuthContext)
     const userRole = JSON.parse(atob(localStorage.getItem('token').split('.')[1])).role;
@@ -176,7 +177,12 @@ const FacultyManagement = () => {
                                         <td className="px-6 py-4">{index + 1}</td>
                                         <td className="px-6 py-4 font-medium flex items-center gap-3">
                                             {faculty.profilePhoto ? (
-                                                <img src={`http://localhost:5000/uploads/${faculty.profilePhoto}`} alt={faculty.name} className="w-10 h-10 rounded-full object-cover" />
+                                                <img
+                                                    src={faculty.profilePhoto.startsWith('http') ? faculty.profilePhoto : `http://localhost:5000/uploads/${faculty.profilePhoto}`}
+                                                    alt={faculty.name}
+                                                    className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-indigo-400 transition-all"
+                                                    onClick={(e) => { e.stopPropagation(); setPreviewImage(faculty.profilePhoto.startsWith('http') ? faculty.profilePhoto : `http://localhost:5000/uploads/${faculty.profilePhoto}`); }}
+                                                />
                                             ) : (
                                                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                                                     {faculty.name.charAt(0)}
@@ -249,13 +255,42 @@ const FacultyManagement = () => {
                             </div>
                             <div className="md:col-span-2">
                                 <label className="label">Profile Photo</label>
-                                <input type="file" name="profilePhoto" onChange={handleInputChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                <div className="flex items-center gap-4 mt-2">
+                                    {formData.profilePhoto && (
+                                        <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-200 shrink-0">
+                                            <img
+                                                src={typeof formData.profilePhoto === 'string'
+                                                    ? (formData.profilePhoto.startsWith('http') ? formData.profilePhoto : `http://localhost:5000/uploads/${formData.profilePhoto}`)
+                                                    : URL.createObjectURL(formData.profilePhoto)}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                    <input type="file" name="profilePhoto" onChange={handleInputChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                </div>
                             </div>
                             <div className="md:col-span-2 flex justify-end gap-3 mt-4">
                                 <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
                                 <Button type="submit">{isEditing ? 'Update Faculty' : 'Add Faculty'}</Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 animate-in fade-in" onClick={() => setPreviewImage(null)}>
+                    <div className="relative max-w-4xl max-h-[90vh] w-full flex justify-center items-center" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setPreviewImage(null)} className="absolute -top-12 right-0 p-2 text-white hover:text-gray-300 transition-colors">
+                            <X className="w-8 h-8" />
+                        </button>
+                        <img
+                            src={previewImage}
+                            alt="Profile Preview"
+                            className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl ring-4 ring-white/10"
+                        />
                     </div>
                 </div>
             )}
