@@ -114,6 +114,16 @@ const TimetableGrid = ({ timetableData, onAdd, onEdit, onDelete, onDuplicate, is
                                                     <div className="text-[10px] font-bold text-gray-600 line-clamp-2 uppercase">
                                                         ({entry.subject_name})
                                                     </div>
+                                                    <div className="text-[9px] font-medium text-gray-500 mt-1 truncate">
+                                                        {(() => {
+                                                            try {
+                                                                const parsed = JSON.parse(entry.faculty_name);
+                                                                return Array.isArray(parsed) ? parsed.join(', ') : entry.faculty_name;
+                                                            } catch (e) {
+                                                                return entry.faculty_name;
+                                                            }
+                                                        })()}
+                                                    </div>
                                                 </div>
 
                                                 <div className="mt-auto flex justify-between items-end">

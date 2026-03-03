@@ -3,13 +3,14 @@ import { useAuth } from '../context/AuthContext';
 import AdminDashboard from './AdminDashboard';
 import FacultyDashboard from './FacultyDashboard';
 import SupportingStaffDashboard from './SupportingStaffDashboard';
-import { LogOut, User, Menu, Bell } from 'lucide-react';
+import { LogOut, User, Menu, Bell, X } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
     const { user, logout } = useAuth();
     const [isScrolled, setIsScrolled] = React.useState(false);
+    const [previewImage, setPreviewImage] = React.useState(null);
 
     React.useEffect(() => {
         const handleScroll = () => {
@@ -47,7 +48,16 @@ const Dashboard = () => {
                                     <div className="text-xs text-primary-600 font-medium mt-0.5 uppercase tracking-wide">{user?.role}</div>
                                 </div>
                                 <div className="h-10 w-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center border border-white ring-2 ring-gray-100 shadow-sm relative group">
-                                    <User className="h-5 w-5 text-gray-500 group-hover:text-gray-700 transition-colors" />
+                                    {user?.profilePhoto ? (
+                                        <img
+                                            src={user.profilePhoto.startsWith('http') ? user.profilePhoto : `http://localhost:5000/uploads/${user.profilePhoto}`}
+                                            alt={user.username}
+                                            className="h-full w-full rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-primary-400 transition-all"
+                                            onClick={() => setPreviewImage(user.profilePhoto.startsWith('http') ? user.profilePhoto : `http://localhost:5000/uploads/${user.profilePhoto}`)}
+                                        />
+                                    ) : (
+                                        <User className="h-5 w-5 text-gray-500 group-hover:text-gray-700 transition-colors" />
+                                    )}
                                     <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></div>
                                 </div>
 
@@ -88,6 +98,22 @@ const Dashboard = () => {
                     <FacultyDashboard user={null} isGuest={true} />
                 )}
             </main>
+
+            {/* Profile Picture Preview Modal */}
+            {previewImage && (
+                <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-in fade-in" onClick={() => setPreviewImage(null)}>
+                    <div className="relative max-w-4xl max-h-[90vh] w-full flex justify-center items-center" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setPreviewImage(null)} className="absolute -top-12 right-0 p-2 text-white hover:text-gray-300 transition-colors">
+                            <X className="w-8 h-8" />
+                        </button>
+                        <img
+                            src={previewImage}
+                            alt="Profile Preview"
+                            className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl ring-4 ring-white/10"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

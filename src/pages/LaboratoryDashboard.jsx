@@ -180,6 +180,28 @@ const LaboratoryDashboard = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={filters.semester}
+                                onChange={(e) => setFilters(prev => ({ ...prev, semester: e.target.value }))}
+                                className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
+                            >
+                                <option value="All">All Semesters</option>
+                                {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].map(s => (
+                                    <option key={s} value={s}>Semester {s}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={filters.section}
+                                onChange={(e) => setFilters(prev => ({ ...prev, section: e.target.value }))}
+                                className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
+                            >
+                                <option value="All">All Sections</option>
+                                <option value="A">Section A</option>
+                                <option value="B">Section B</option>
+                            </select>
+                        </div>
+
                         {['admin', 'hod', 'faculty', 'supporting_staff'].includes(user?.role) && (
                             <Button
                                 onClick={() => handleAddClick('Monday', 1)}
@@ -276,7 +298,11 @@ const LaboratoryDashboard = () => {
                         ) : (
                             <div className="rounded-[24px] border border-gray-100 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.02)]">
                                 <TimetableGrid
-                                    timetableData={timetableData}
+                                    timetableData={timetableData.filter(item => {
+                                        if (filters.semester !== 'All' && item.semester !== filters.semester) return false;
+                                        if (filters.section !== 'All' && item.section !== filters.section) return false;
+                                        return true;
+                                    })}
                                     isEditable={['admin', 'hod', 'faculty', 'supporting_staff'].includes(user?.role)}
                                     isLabView={true}
                                     onAdd={handleAddClick}
@@ -357,6 +383,7 @@ const LaboratoryDashboard = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleModalSubmit}
                 initialData={modalData}
+                isLabView={true}
             />
         </div>
     );

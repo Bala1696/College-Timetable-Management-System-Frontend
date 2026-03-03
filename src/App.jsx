@@ -11,6 +11,7 @@ import FacultyManagement from './pages/FacultyManagement';
 import StaffManagement from './pages/StaffManagement';
 import LaboratoryDashboard from './pages/LaboratoryDashboard';
 import Students from './pages/Students';
+import AdminWorkload from './pages/AdminWorkload';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -68,10 +69,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/workload"
+            element={
+              <ProtectedRoute>
+                <AdminWorkload />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </AuthProvider>
-    </Router>
+    </Router >
   );
 }
 

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://college-timetable-management-system.onrender.com/api', // Adjust if backend port differs
+    baseURL: 'http://localhost:5000/api', // Adjust if backend port differs
+    withCredentials: true,
 });
 
 // Add a request interceptor to include the token

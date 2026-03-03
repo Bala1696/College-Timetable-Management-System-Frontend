@@ -311,6 +311,10 @@ const AdminDashboard = ({ user }) => {
                             <GraduationCap className="w-6 h-6 text-indigo-600" />
                             <span>Student Management</span>
                         </Button>
+                        <Button variant="outline" onClick={() => navigate('/admin/workload')} className="h-auto py-4 flex flex-col gap-2 hover:border-teal-500 hover:bg-teal-50 col-span-2 md:col-span-1">
+                            <Clock className="w-6 h-6 text-teal-600" />
+                            <span>Staff Workload</span>
+                        </Button>
                     </div>
                 </Card>
 
@@ -332,8 +336,8 @@ const AdminDashboard = ({ user }) => {
                         </div>
                     </div>
                 </Card>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
