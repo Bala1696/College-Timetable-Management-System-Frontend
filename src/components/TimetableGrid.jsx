@@ -94,10 +94,7 @@ const TimetableGrid = ({ timetableData, onAdd, onEdit, onDelete, onDuplicate, is
                                     <td
                                         key={period.id}
                                         colSpan={spanCount}
-                                        className={`p-1 border-r border-gray-200 h-28 align-top relative group/cell transition-all
-                                            ${!entry && isEditable ? 'hover:bg-indigo-50/30 cursor-pointer' : ''}
-                                        `}
-                                        onClick={() => !entry && isEditable && onAdd(day, period.id)}
+                                        className={`p-1 border-r border-gray-200 h-28 align-top relative transition-all group/cell`}
                                     >
                                         {entry ? (
                                             <div className={`
@@ -158,11 +155,7 @@ const TimetableGrid = ({ timetableData, onAdd, onEdit, onDelete, onDuplicate, is
                                                 </div>
                                             </div>
                                         ) : (
-                                            isEditable && (
-                                                <div className="h-full w-full flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                                    <Plus className="w-4 h-4 text-indigo-400" />
-                                                </div>
-                                            )
+                                            <div className="h-full w-full bg-transparent"></div>
                                         )}
                                     </td>
                                 );

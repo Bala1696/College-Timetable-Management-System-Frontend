@@ -28,6 +28,9 @@ import Input from "../components/ui/Input";
 import { useAuth } from "../context/AuthContext";
 
 const YEARS = ["I", "II", "III", "IV"];
+const SECTIONS = ["A", "B", "C", "D", "E", "F"];
+
+
 
 export default function Students() {
     const navigate = useNavigate();
@@ -36,22 +39,27 @@ export default function Students() {
     const token = localStorage.getItem("token");
 
     const [year, setYear] = useState("I");
+    const [section, setSection] = useState("A");
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
+
 
     const [form, setForm] = useState({
         rollNumber: "",
         studentName: "",
         remarks: "",
+        section: "A",
     });
+
     const [editId, setEditId] = useState(null);
 
     const fetchStudents = async () => {
         setLoading(true);
         try {
-            const res = await getStudentsApi(year, token);
+            const res = await getStudentsApi(year, section, token);
             setStudents(Array.isArray(res.data) ? res.data : []);
+
         } catch (error) {
             console.error("Fetch failed", error);
             setStudents([]);
@@ -63,8 +71,9 @@ export default function Students() {
     useEffect(() => {
         fetchStudents();
         setEditId(null);
-        setForm({ rollNumber: "", studentName: "", remarks: "" });
-    }, [year]);
+        setForm({ rollNumber: "", studentName: "", remarks: "", section });
+    }, [year, section]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -75,6 +84,7 @@ export default function Students() {
 
         const payload = { ...form, year };
 
+
         try {
             if (editId) {
                 await updateStudentApi(editId, payload, token);
@@ -82,7 +92,8 @@ export default function Students() {
                 await createStudentApi(payload, token);
             }
 
-            setForm({ rollNumber: "", studentName: "", remarks: "" });
+            setForm({ rollNumber: "", studentName: "", remarks: "", section });
+
             setEditId(null);
             fetchStudents();
         } catch (err) {
@@ -105,9 +116,10 @@ export default function Students() {
     const handleExport = async (type) => {
         try {
             let res;
-            if (type === "excel") res = await exportExcelApi(year, token);
-            if (type === "pdf") res = await exportPDFApi(year, token);
-            if (type === "word") res = await exportWordApi(year, token);
+            if (type === "excel") res = await exportExcelApi(year, section, token);
+            if (type === "pdf") res = await exportPDFApi(year, section, token);
+            if (type === "word") res = await exportWordApi(year, section, token);
+
 
             const mimeTypes = {
                 excel: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -119,7 +131,8 @@ export default function Students() {
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `students-${year}.${type === "excel" ? "xlsx" : type === "word" ? "docx" : "pdf"}`;
+            link.download = `students-${year}-${section}.${type === "excel" ? "xlsx" : type === "word" ? "docx" : "pdf"}`;
+
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -167,20 +180,37 @@ export default function Students() {
                         </div>
                     </div>
 
-                    <div className="flex bg-white/70 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-gray-200/60 overflow-x-auto max-w-full">
-                        {YEARS.map(y => (
-                            <button
-                                key={y}
-                                onClick={() => setYear(y)}
-                                className={`px-6 py-2.5 text-xs font-black rounded-xl transition-all whitespace-nowrap uppercase tracking-wider ${year === y
-                                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30 ring-1 ring-primary-500/50'
-                                    : 'text-gray-500 hover:bg-gray-100/50 hover:text-gray-700'
-                                    }`}
-                            >
-                                {y} Year
-                            </button>
-                        ))}
+                    <div className="flex flex-col gap-2">
+                        <div className="flex bg-white/70 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-gray-200/60 overflow-x-auto max-w-full">
+                            {YEARS.map(y => (
+                                <button
+                                    key={y}
+                                    onClick={() => setYear(y)}
+                                    className={`px-6 py-2.5 text-xs font-black rounded-xl transition-all whitespace-nowrap uppercase tracking-wider ${year === y
+                                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30 ring-1 ring-primary-500/50'
+                                        : 'text-gray-500 hover:bg-gray-100/50 hover:text-gray-700'
+                                        }`}
+                                >
+                                    {y} Year
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex bg-white/70 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-gray-200/60 overflow-x-auto max-w-full">
+                            {SECTIONS.map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => setSection(s)}
+                                    className={`px-6 py-2.5 text-xs font-black rounded-xl transition-all whitespace-nowrap uppercase tracking-wider ${section === s
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-indigo-500/50'
+                                        : 'text-gray-500 hover:bg-gray-100/50 hover:text-gray-700'
+                                        }`}
+                                >
+                                    Section {s}
+                                </button>
+                            ))}
+                        </div>
                     </div>
+
                 </div>
 
                 {/* Action Bar */}
@@ -196,9 +226,9 @@ export default function Students() {
                     </div>
 
                     <div className="xl:col-span-2">
-                        {["ADMIN", "FACULTY", "SUPPORTING_STAFF"].includes(role) && (
+                        {["ADMIN", "FACULTY"].includes(role) && (
                             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-[120px]">
                                     <input
                                         placeholder="Roll No"
                                         value={form.rollNumber}
@@ -207,7 +237,7 @@ export default function Students() {
                                         required
                                     />
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-[150px]">
                                     <input
                                         placeholder="Student Name"
                                         value={form.studentName}
@@ -216,7 +246,17 @@ export default function Students() {
                                         required
                                     />
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-[120px]">
+                                    <select
+                                        value={form.section}
+                                        onChange={(e) => setForm({ ...form, section: e.target.value })}
+                                        className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                        required
+                                    >
+                                        {SECTIONS.map(s => <option key={s} value={s}>Sec {s}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex-1 min-w-[150px]">
                                     <input
                                         placeholder="Remarks"
                                         value={form.remarks}
@@ -224,21 +264,24 @@ export default function Students() {
                                         className="w-full bg-white border border-gray-200 rounded-xl py-3 px-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
                                     />
                                 </div>
-                                <Button type="submit" className="px-8 shadow-lg shadow-primary-500/20">
+                                <Button type="submit" className="px-8 shadow-lg shadow-primary-500/20 whitespace-nowrap">
                                     {editId ? "Update" : "Add Student"}
                                 </Button>
                             </form>
+
                         )}
                     </div>
 
                     <div className="xl:col-span-1 flex justify-end gap-2">
-                        <button
-                            onClick={() => handleExport("excel")}
-                            title="Excel Export"
-                            className="p-3 bg-white hover:bg-emerald-50 text-emerald-600 rounded-2xl border border-gray-200 hover:border-emerald-200 shadow-sm transition-all"
-                        >
-                            <FileSpreadsheet className="w-5 h-5" />
-                        </button>
+                        {role !== "SUPPORTING_STAFF" && (
+                            <button
+                                onClick={() => handleExport("excel")}
+                                title="Excel Export"
+                                className="p-3 bg-white hover:bg-emerald-50 text-emerald-600 rounded-2xl border border-gray-200 hover:border-emerald-200 shadow-sm transition-all"
+                            >
+                                <FileSpreadsheet className="w-5 h-5" />
+                            </button>
+                        )}
                         <button
                             onClick={() => handleExport("pdf")}
                             title="PDF Export"
@@ -266,13 +309,16 @@ export default function Students() {
                                     <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Roll Number</th>
                                     <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Full Name</th>
                                     <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Remarks</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-gray-400">Section</th>
                                     <th className="px-8 py-5 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Management</th>
+
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="5" className="py-24 text-center">
+                                        <td colSpan="6" className="py-24 text-center">
+
                                             <div className="animate-spin w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full mx-auto mb-4"></div>
                                             <p className="text-xs font-bold text-gray-400 tracking-widest uppercase">Loading Database...</p>
                                         </td>
@@ -291,9 +337,15 @@ export default function Students() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-sm text-gray-500 font-medium italic">{s.remarks || "—"}</td>
+                                            <td className="px-8 py-6">
+                                                <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg border border-gray-200">
+                                                    Section {s.section || 'A'}
+                                                </span>
+                                            </td>
+
                                             <td className="px-8 py-6 text-right">
                                                 <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {["ADMIN", "FACULTY", "SUPPORTING_STAFF"].includes(role) && (
+                                                    {["ADMIN", "FACULTY"].includes(role) && (
                                                         <button
                                                             onClick={() => {
                                                                 setEditId(s.id);
@@ -301,7 +353,9 @@ export default function Students() {
                                                                     rollNumber: s.rollNumber,
                                                                     studentName: s.studentName,
                                                                     remarks: s.remarks || "",
+                                                                    section: s.section || "A",
                                                                 });
+
                                                             }}
                                                             className="p-2.5 bg-white text-yellow-600 hover:bg-yellow-50 rounded-xl border border-gray-100 transition-all font-bold"
                                                             title="Edit Record"
@@ -324,12 +378,13 @@ export default function Students() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="py-24 text-center">
+                                        <td colSpan="6" className="py-24 text-center">
                                             <GraduationCap className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                                            <h3 className="text-lg font-bold text-gray-400">No records found for {year} Year</h3>
+                                            <h3 className="text-lg font-bold text-gray-400">No records found for {year} Year, Section {section}</h3>
                                             <p className="text-sm text-gray-400 mt-1 italic">Try adjusting your filters or adding a new student.</p>
                                         </td>
                                     </tr>
+
                                 )}
                             </tbody>
                         </table>

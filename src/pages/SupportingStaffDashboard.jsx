@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { FlaskConical, Clock, Calendar, Layout, ArrowRight, User as UserIcon, GraduationCap } from 'lucide-react';
+import { FlaskConical, Clock, Calendar, Layout, ArrowRight, User as UserIcon, GraduationCap, Settings } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import SettingsModal from '../components/SettingsModal';
 
 const SupportingStaffDashboard = ({ user }) => {
     const navigate = useNavigate();
     const [labStats, setLabStats] = useState({ totalClasses: 0, pendingTasks: 0 });
+    const [departmentName, setDepartmentName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
         fetchStats();
@@ -17,12 +20,17 @@ const SupportingStaffDashboard = ({ user }) => {
     const fetchStats = async () => {
         setLoading(true);
         try {
-            const response = await api.get('/timetables');
-            const labClasses = response.data.filter(item => item.type === 'Lab');
+            const [timetableRes, statsRes] = await Promise.all([
+                api.get('/timetables'),
+                api.get('/admin/stats').catch(() => ({ data: { departmentName: '' } }))
+            ]);
+
+            const labClasses = timetableRes.data.filter(item => item.type === 'Lab');
             setLabStats({
                 totalClasses: labClasses.length,
                 activeLabs: new Set(labClasses.map(c => c.venue)).size
             });
+            setDepartmentName(statsRes.data.departmentName);
         } catch (error) {
             console.error('Error fetching stats:', error);
         } finally {
@@ -32,14 +40,16 @@ const SupportingStaffDashboard = ({ user }) => {
 
     return (
         <div className="space-y-8 animate-fade-in">
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
             {/* Hero Section */}
             <Card className="bg-gradient-to-br from-emerald-600 to-teal-800 text-white border-none shadow-premium overflow-hidden relative">
                 <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
-                    <div>
+                    <div className="flex-1">
                         <div className="flex items-center gap-2 mb-3">
                             <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20">
-                                Support Personnel
+                                {departmentName || 'Support Personnel'}
                             </span>
                         </div>
                         <h1 className="text-4xl font-black font-display text-white tracking-tight">
@@ -48,6 +58,15 @@ const SupportingStaffDashboard = ({ user }) => {
                         <p className="text-emerald-50 mt-3 text-lg font-medium max-w-xl">
                             Managing technical laboratory resources and ensuring optimal environment for practical learning.
                         </p>
+                        <div className="mt-6">
+                            <Button
+                                onClick={() => setIsSettingsOpen(true)}
+                                className="bg-blue-500 text-white hover:bg-blue-600 border-none shadow-lg shadow-blue-500/20"
+                            >
+                                <Settings className="w-5 h-5 mr-2" />
+                                Account Settings
+                            </Button>
+                        </div>
                     </div>
                     <div className="flex items-center bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-xl">
                         <div className="text-center px-4 border-r border-white/10">

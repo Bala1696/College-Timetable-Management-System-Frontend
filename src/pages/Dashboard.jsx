@@ -5,12 +5,20 @@ import FacultyDashboard from './FacultyDashboard';
 import SupportingStaffDashboard from './SupportingStaffDashboard';
 import { LogOut, User, Menu, Bell, X } from 'lucide-react';
 import Button from '../components/ui/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [previewImage, setPreviewImage] = React.useState(null);
+
+    // Redirect superadmin immediately to their own dashboard
+    React.useEffect(() => {
+        if (user?.role === 'superadmin') {
+            navigate('/superadmin/dashboard');
+        }
+    }, [user]);
 
     React.useEffect(() => {
         const handleScroll = () => {
@@ -30,7 +38,7 @@ const Dashboard = () => {
                             C
                         </div>
                         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight hidden md:block font-display">
-                            College Timetable
+                            College Timetable System
                         </span>
                     </div>
 

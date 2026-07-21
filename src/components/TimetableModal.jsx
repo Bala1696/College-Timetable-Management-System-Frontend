@@ -14,12 +14,7 @@ const PERIOD_TIMES = {
     8: { start: '04:00 PM', end: '04:45 PM' }
 };
 
-const LAB_ROOMS = [
-    'GEN AI LABORATORY',
-    'DATA SCIENCE LABORATORY',
-    'MACHINE LEARNING LABORATORY',
-    'DEEP LEARNING LABORATORY'
-];
+// Lab rooms are loaded dynamically from /api/labs per department
 
 const TimetableFormData = {
     semester: 'I',
@@ -68,20 +63,26 @@ export const TimetableModal = ({ isOpen, onClose, onSubmit, initialData, isLabVi
     const [formData, setFormData] = useState(TimetableFormData);
     const [error, setError] = useState('');
     const [facultyList, setFacultyList] = useState([]);
+    const [labRooms, setLabRooms] = useState([]);
+    const [subjectsList, setSubjectsList] = useState([]);
     const [isFacultyDropdownOpen, setIsFacultyDropdownOpen] = useState(false);
 
     useEffect(() => {
         const loadInitialData = async () => {
             try {
-                const [facultyRes, staffRes] = await Promise.all([
+                const [facultyRes, staffRes, labRes, subjectsRes] = await Promise.all([
                     api.get('/admin/faculty'),
-                    api.get('/admin/staff')
+                    api.get('/admin/staff'),
+                    api.get('/labs'),
+                    api.get('/subjects')
                 ]);
 
                 const faculty = facultyRes.data.map(f => ({ ...f, type: 'Faculty' }));
                 const staff = staffRes.data.map(s => ({ ...s, type: 'Staff' }));
 
                 setFacultyList([...faculty, ...staff]);
+                setLabRooms(labRes.data.map(l => l.name));
+                setSubjectsList(subjectsRes.data);
             } catch (err) {
                 console.error("Failed to fetch faculty/staff", err);
             }
@@ -190,21 +191,44 @@ export const TimetableModal = ({ isOpen, onClose, onSubmit, initialData, isLabVi
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
                         <select name="section" value={formData.section} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
-                            {['A', 'B'].map(s => (
+                            {['A', 'B', 'C', 'D', 'E', 'F'].map(s => (
                                 <option key={s} value={s}>Section {s}</option>
                             ))}
+
                         </select>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Course Code</label>
-                        <input type="text" name="course_code" value={formData.course_code} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
-                        <input type="text" name="subject_name" value={formData.subject_name} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" required />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Course & Subject</label>
+                        <select
+                            onChange={(e) => {
+                                if (!e.target.value) {
+                                    setFormData(prev => ({ ...prev, course_code: '', subject_name: '' }));
+                                    return;
+                                }
+                                const selected = JSON.parse(e.target.value);
+                                setFormData(prev => ({ ...prev, course_code: selected.courseCode, subject_name: selected.subjectName }));
+                            }}
+                            value={formData.course_code && formData.subject_name ? JSON.stringify({ courseCode: formData.course_code, subjectName: formData.subject_name }) : ""}
+                            className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                            required
+                        >
+                            <option value="">Select Course & Subject</option>
+                            {subjectsList.length > 0 ? (
+                                subjectsList.map(sub => (
+                                    <option key={sub.id} value={JSON.stringify({ courseCode: sub.courseCode, subjectName: sub.subjectName })}>
+                                        {sub.courseCode} - {sub.subjectName}
+                                    </option>
+                                ))
+                            ) : (
+                                <option disabled>No subjects added yet — add via Dashboard</option>
+                            )}
+                        </select>
+                        {subjectsList.length === 0 && (
+                            <p className="text-xs text-yellow-600 mt-1">⚠️ Please add subjects from the Subject Management page first.</p>
+                        )}
                     </div>
                 </div>
 
@@ -324,10 +348,17 @@ export const TimetableModal = ({ isOpen, onClose, onSubmit, initialData, isLabVi
                             required
                         >
                             <option value="">Select Laboratory</option>
-                            {LAB_ROOMS.map(lab => (
-                                <option key={lab} value={lab}>{lab}</option>
-                            ))}
+                            {labRooms.length > 0 ? (
+                                labRooms.map(lab => (
+                                    <option key={lab} value={lab}>{lab}</option>
+                                ))
+                            ) : (
+                                <option disabled>No labs added yet — add via Admin Dashboard</option>
+                            )}
                         </select>
+                        {labRooms.length === 0 && (
+                            <p className="text-xs text-yellow-600 mt-1">⚠️ Go to Admin Dashboard → Lab Rooms to add labs for your department.</p>
+                        )}
                     </div>
                 )}
 

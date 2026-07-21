@@ -8,29 +8,53 @@ import { FlaskConical, Clock, Filter, Download, Plus, ChevronLeft, Calendar, Inf
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
-const LAB_ROOMS = [
-    'GEN AI LABORATORY',
-    'DATA SCIENCE LABORATORY',
-    'MACHINE LEARNING LABORATORY',
-    'DEEP LEARNING LABORATORY',
-];
-
 const LaboratoryDashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [timetableData, setTimetableData] = useState([]);
+    const [labRooms, setLabRooms] = useState([]);
+    const [departmentName, setDepartmentName] = useState('Your Department');
     const [loading, setLoading] = useState(true);
-    const [selectedLab, setSelectedLab] = useState(LAB_ROOMS[0]);
+    const [selectedLab, setSelectedLab] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalData, setModalData] = useState(null);
     const [filters, setFilters] = useState({
-        semester: 'All', // Show all classes in this lab regardless of semester
+        semester: 'All',
         section: 'All'
     });
 
     useEffect(() => {
-        fetchLabTimetable();
+        fetchInitialData();
+    }, []);
+
+    useEffect(() => {
+        if (selectedLab) {
+            fetchLabTimetable();
+        }
     }, [selectedLab]);
+
+    const fetchInitialData = async () => {
+        setLoading(true);
+        try {
+            const [labsRes, statsRes] = await Promise.all([
+                api.get('/labs'),
+                api.get('/admin/stats').catch(() => ({ data: { departmentName: 'Your Department' } }))
+            ]);
+
+            const labs = labsRes.data;
+            setLabRooms(labs);
+            setDepartmentName(statsRes.data.departmentName || 'Your Department');
+
+            if (labs.length > 0) {
+                setSelectedLab(labs[0].name);
+            } else {
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Failed to fetch initial data:', error);
+            setLoading(false);
+        }
+    };
 
     const fetchLabTimetable = async () => {
         setLoading(true);
@@ -126,7 +150,6 @@ const LaboratoryDashboard = () => {
 
     const handleExport = async (type) => {
         try {
-            // Similar to general export but with lab-specific context
             const response = await api.get(`/export/${type}`, {
                 params: { venue: selectedLab },
                 responseType: 'blob'
@@ -137,7 +160,7 @@ const LaboratoryDashboard = () => {
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `${selectedLab.replace(/ /g, '_')}_Timetable.${type === 'pdf' ? 'pdf' : 'docx'}`);
+            link.setAttribute('download', `${(selectedLab || 'Lab').replace(/ /g, '_')}_Timetable.${type === 'pdf' ? 'pdf' : 'docx'}`);
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -186,6 +209,7 @@ const LaboratoryDashboard = () => {
                                 onChange={(e) => setFilters(prev => ({ ...prev, semester: e.target.value }))}
                                 className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
                             >
+                                <option value="" disabled>Select Semester</option>
                                 <option value="All">All Semesters</option>
                                 {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].map(s => (
                                     <option key={s} value={s}>Semester {s}</option>
@@ -196,9 +220,15 @@ const LaboratoryDashboard = () => {
                                 onChange={(e) => setFilters(prev => ({ ...prev, section: e.target.value }))}
                                 className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
                             >
+                                <option value="" disabled>Select Section</option>
                                 <option value="All">All Sections</option>
                                 <option value="A">Section A</option>
                                 <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                                <option value="D">Section D</option>
+                                <option value="E">Section E</option>
+                                <option value="F">Section F</option>
+
                             </select>
                         </div>
 
@@ -213,18 +243,22 @@ const LaboratoryDashboard = () => {
                         )}
 
                         <div className="flex bg-white/70 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-gray-200/60 overflow-x-auto max-w-full">
-                            {LAB_ROOMS.map(lab => (
-                                <button
-                                    key={lab}
-                                    onClick={() => setSelectedLab(lab)}
-                                    className={`px-5 py-2.5 text-xs font-black rounded-xl transition-all whitespace-nowrap uppercase tracking-wider ${selectedLab === lab
-                                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30 ring-1 ring-primary-500/50'
-                                        : 'text-gray-500 hover:bg-gray-100/50 hover:text-gray-700'
-                                        }`}
-                                >
-                                    {lab.split(' ')[0]}
-                                </button>
-                            ))}
+                            {labRooms.length > 0 ? (
+                                labRooms.map(lab => (
+                                    <button
+                                        key={lab.id}
+                                        onClick={() => setSelectedLab(lab.name)}
+                                        className={`px-5 py-2.5 text-xs font-black rounded-xl transition-all whitespace-nowrap uppercase tracking-wider ${selectedLab === lab.name
+                                            ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30 ring-1 ring-primary-500/50'
+                                            : 'text-gray-500 hover:bg-gray-100/50 hover:text-gray-700'
+                                            }`}
+                                    >
+                                        {lab.name.split(' ')[0]}
+                                    </button>
+                                ))
+                            ) : (
+                                <span className="px-5 py-2.5 text-xs font-bold text-gray-400">No Labs Added</span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -243,22 +277,22 @@ const LaboratoryDashboard = () => {
                                     </div>
                                     <div>
                                         <div className="text-primary-600 font-black tracking-[0.2em] text-[10px] uppercase">
-                                            Department of AI & Data Science
+                                            Department of {departmentName}
                                         </div>
                                         <h2 className="text-3xl font-black text-gray-900 font-display tracking-tight mt-0.5">
-                                            {selectedLab}
+                                            {selectedLab || 'No Lab Selected'}
                                         </h2>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 text-sm font-bold text-gray-400 pl-14">
                                     <div className="flex items-center gap-1.5">
                                         <Clock className="w-4 h-4 text-primary-500" />
-                                        AY 2025-26
+                                        AY 2026-2027
                                     </div>
                                     <div className="h-4 w-px bg-gray-200"></div>
                                     <div className="flex items-center gap-1.5">
                                         <Calendar className="w-4 h-4 text-indigo-500" />
-                                        Even Semester
+                                        {['II','IV','VI','VIII'].includes(filters.semester) ? 'Even Semester' : 'Odd Semester'}
                                     </div>
                                 </div>
                             </div>

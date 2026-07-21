@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import TimetableGrid from '../components/TimetableGrid';
-import { BookOpen, Users, Clock, Filter, Download, Plus, FlaskConical, GraduationCap } from 'lucide-react';
+import { BookOpen, Users, Clock, Settings, Download, Plus, FlaskConical, GraduationCap, Layout } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
@@ -25,19 +25,47 @@ const StatsCard = ({ title, value, icon: Icon, color, bg }) => (
 const AdminDashboard = ({ user }) => {
     const navigate = useNavigate();
     const [timetableData, setTimetableData] = useState([]);
+    const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({ semester: 'I', section: 'A' });
-    const [stats, setStats] = useState({ courses: 0, faculty: 0, staff: 0, users: 0 });
+    const [filters, setFilters] = useState({ semester: '', section: '' });
+    const [stats, setStats] = useState({ courses: 0, faculty: 0, staff: 0, users: 0, departmentName: null });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalData, setModalData] = useState(null);
 
     useEffect(() => {
-        fetchTimetable();
+        fetchDepartments();
         fetchStats();
+    }, []);
+
+    useEffect(() => {
+        fetchTimetable();
     }, [filters]);
 
+    const fetchDepartments = async () => {
+        try {
+            const response = await api.get('/departments/public');
+            // For admins, restrict to their own department directly if we only want them to see theirs.
+            // But since user requested "select department", we will populate
+            // the dropdown. To ensure security, if they are not superadmin,
+            // we filter the list to only their departmentId.
+            if (user?.role !== 'superadmin' && user?.departmentId) {
+                setDepartments(response.data.filter(d => d.id === user.departmentId));
+            } else {
+                setDepartments(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching departments:', error);
+        }
+    };
+
     const fetchTimetable = async () => {
+        if (!filters.semester || !filters.section) {
+            setTimetableData([]);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await api.get('/timetables', { params: filters });
@@ -153,17 +181,23 @@ const AdminDashboard = ({ user }) => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
+                    {stats.departmentName && (
+                        <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary-600 bg-primary-50 border border-primary-200 px-3 py-1 rounded-full mb-2">
+                            🏛️ {stats.departmentName}
+                        </div>
+                    )}
                     <h1 className="text-3xl font-bold text-gray-900 font-display">Dashboard Overview</h1>
-                    <p className="text-gray-500 mt-1">Welcome back, Administrator. Here's what's happening today.</p>
+                    <p className="text-gray-500 mt-1">Welcome back, {user?.username}. Here's what's happening today.</p>
                 </div>
                 <div className="flex gap-3">
                     <Button
-                        className="bg-white text-gray-700 border-gray-200 hover:bg-gray-50 shadow-sm"
+                        className="bg-indigo-600 text-white hover:bg-indigo-700 border-none shadow-lg shadow-indigo-600/20"
                         onClick={() => setIsSettingsOpen(true)}
                     >
-                        <Filter className="w-4 h-4 mr-2" />
+                        <Settings className="w-4 h-4 mr-2" />
                         Settings
                     </Button>
+
                     <Button onClick={() => handleAddClick('Monday', 1)}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add New
@@ -213,7 +247,7 @@ const AdminDashboard = ({ user }) => {
                             </span>
                             Master Timetable
                         </h2>
-                        <p className="text-sm text-gray-500 mt-1 pl-11">View and manage academic schedules across all departments</p>
+                        <p className="text-sm text-gray-500 mt-1 pl-11">View and manage academic schedules for your department</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -224,6 +258,7 @@ const AdminDashboard = ({ user }) => {
                                 onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
                                 className="bg-transparent border-none text-sm font-semibold focus:ring-0 text-gray-700 py-2 pl-3 pr-8 cursor-pointer hover:text-primary-600 transition-colors"
                             >
+                                <option value="" disabled>Select Semester</option>
                                 <option value="I">Semester I</option>
                                 <option value="II">Semester II</option>
                                 <option value="III">Semester III</option>
@@ -239,8 +274,14 @@ const AdminDashboard = ({ user }) => {
                                 onChange={(e) => setFilters({ ...filters, section: e.target.value })}
                                 className="bg-transparent border-none text-sm font-semibold focus:ring-0 text-gray-700 py-2 pl-3 pr-8 cursor-pointer hover:text-primary-600 transition-colors"
                             >
+                                <option value="" disabled>Select Section</option>
                                 <option value="A">Section A</option>
                                 <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                                <option value="D">Section D</option>
+                                <option value="E">Section E</option>
+                                <option value="F">Section F</option>
+
                             </select>
                         </div>
 
@@ -314,6 +355,14 @@ const AdminDashboard = ({ user }) => {
                         <Button variant="outline" onClick={() => navigate('/admin/workload')} className="h-auto py-4 flex flex-col gap-2 hover:border-teal-500 hover:bg-teal-50 col-span-2 md:col-span-1">
                             <Clock className="w-6 h-6 text-teal-600" />
                             <span>Staff Workload</span>
+                        </Button>
+                        <Button variant="outline" onClick={() => navigate('/admin/labs')} className="h-auto py-4 flex flex-col gap-2 hover:border-orange-500 hover:bg-orange-50 col-span-2 md:col-span-1 border-orange-200 bg-orange-50/10">
+                            <FlaskConical className="w-6 h-6 text-orange-600" />
+                            <span>Manage Lab Rooms</span>
+                        </Button>
+                        <Button variant="outline" onClick={() => navigate('/admin/subjects')} className="h-auto py-4 flex flex-col gap-2 hover:border-blue-500 hover:bg-blue-50 col-span-2 md:col-span-1 border-blue-200 bg-blue-50/10">
+                            <BookOpen className="w-6 h-6 text-blue-600" />
+                            <span>Manage Subjects</span>
                         </Button>
                     </div>
                 </Card>

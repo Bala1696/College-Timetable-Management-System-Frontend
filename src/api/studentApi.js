@@ -1,7 +1,7 @@
 import api from './axios';
 
-export const getStudentsApi = (year, token) => api.get('/students', {
-    params: { year },
+export const getStudentsApi = (year, section, token) => api.get('/students', {
+    params: { year, section },
     headers: { Authorization: `Bearer ${token}` }
 });
 
@@ -17,20 +17,21 @@ export const deleteStudentApi = (id, token) => api.delete(`/students/${id}`, {
     headers: { Authorization: `Bearer ${token}` }
 });
 
-export const exportExcelApi = (year, token) => api.get('/students/export/excel', {
-    params: { year },
+export const exportExcelApi = (year, section, token) => api.get('/students/export/excel', {
+    params: { year, section },
     headers: { Authorization: `Bearer ${token}` },
     responseType: 'blob'
 });
 
-export const exportPDFApi = (year, token) => api.get('/students/export/pdf', {
-    params: { year },
+export const exportPDFApi = (year, section, token) => api.get('/students/export/pdf', {
+    params: { year, section },
     headers: { Authorization: `Bearer ${token}` },
     responseType: 'blob'
 });
 
-export const exportWordApi = (year, token) => api.get('/students/export/word', {
-    params: { year },
+export const exportWordApi = (year, section, token) => api.get('/students/export/word', {
+    params: { year, section },
     headers: { Authorization: `Bearer ${token}` },
     responseType: 'blob'
 });
+
