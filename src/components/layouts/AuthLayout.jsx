@@ -13,9 +13,9 @@ const AuthLayout = ({ children, title, subtitle }) => {
                     <div className="h-16 w-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-8 ring-1 ring-white/20 shadow-2xl">
                         <BookOpen className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-4xl font-bold mb-4 font-display">AI&DS Timetable System</h1>
+                    <h1 className="text-4xl font-bold mb-4 font-display">College Timetable System</h1>
                     <p className="text-lg text-primary-100 max-w-md">
-                        Manage schedules, faculties, and academic resources efficiently with our intelligent coordination platform.
+                        Manage schedules, faculties, and academic resources efficiently for your department.
                     </p>
                 </div>
 

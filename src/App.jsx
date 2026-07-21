@@ -6,12 +6,16 @@ import Signup from './pages/Signup';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import FacultyManagement from './pages/FacultyManagement';
-import StaffManagement from './pages/StaffManagement';
+import AdminWorkload from './pages/AdminWorkload';
+import SuperadminDashboard from './pages/SuperadminDashboard';
+import LabRoomManagement from './pages/LabRoomManagement';
 import LaboratoryDashboard from './pages/LaboratoryDashboard';
 import Students from './pages/Students';
-import AdminWorkload from './pages/AdminWorkload';
+import FacultyManagement from './pages/FacultyManagement';
+import StaffManagement from './pages/StaffManagement';
+import Dashboard from './pages/Dashboard';
+import MasterTimetable from './pages/MasterTimetable';
+import SubjectManagement from './pages/SubjectManagement';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -74,6 +78,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminWorkload />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/superadmin/dashboard"
+            element={
+              <ProtectedRoute>
+                <SuperadminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/labs"
+            element={
+              <ProtectedRoute>
+                <LabRoomManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/master-timetable"
+            element={
+              <ProtectedRoute>
+                <MasterTimetable />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/subjects"
+            element={
+              <ProtectedRoute>
+                <SubjectManagement />
               </ProtectedRoute>
             }
           />

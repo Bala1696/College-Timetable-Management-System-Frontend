@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import TimetableGrid from '../components/TimetableGrid';
 import { TimetableModal } from '../components/TimetableModal';
-import { Plus, Clock, Calendar, Filter, FlaskConical, GraduationCap } from 'lucide-react';
+import { Plus, Clock, Calendar, Settings, FlaskConical, GraduationCap } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
@@ -13,6 +13,7 @@ const FacultyDashboard = ({ user, isGuest = false }) => {
     const navigate = useNavigate();
     const [timetableData, setTimetableData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [departmentName, setDepartmentName] = useState('');
     const [filters, setFilters] = useState({ semester: 'I', section: 'A' });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalData, setModalData] = useState(null);
@@ -20,7 +21,17 @@ const FacultyDashboard = ({ user, isGuest = false }) => {
 
     useEffect(() => {
         fetchTimetable();
+        fetchStats();
     }, [filters]);
+
+    const fetchStats = async () => {
+        try {
+            const response = await api.get('/admin/stats');
+            setDepartmentName(response.data.departmentName);
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        }
+    };
 
     const fetchTimetable = async () => {
         setLoading(true);
@@ -153,7 +164,7 @@ const FacultyDashboard = ({ user, isGuest = false }) => {
                         </h1>
                         <p className="text-indigo-100 mt-2 text-lg">
                             {isGuest
-                                ? 'View and track academic schedules for the AI & DS Department.'
+                                ? `View and track academic schedules for the ${departmentName || 'your'} department.`
                                 : 'Manage your academic schedule and course deliveries effectively.'}
                         </p>
                     </div>
@@ -161,15 +172,15 @@ const FacultyDashboard = ({ user, isGuest = false }) => {
                         <div className="flex gap-3">
                             <Button
                                 onClick={() => setIsSettingsOpen(true)}
-                                className="bg-white/10 text-white hover:bg-white/20 border-white/20 shadow-lg backdrop-blur-sm"
+                                className="bg-indigo-500 text-white hover:bg-indigo-600 border-none shadow-lg shadow-indigo-500/20"
                                 size="lg"
                             >
-                                <Filter className="w-5 h-5 mr-2" />
-                                Settings
+                                <Settings className="w-5 h-5 mr-2" />
+                                Account Settings
                             </Button>
                             <Button
                                 onClick={() => handleAddClick('Monday', 1)}
-                                className="bg-white text-indigo-700 hover:bg-indigo-50 border-none shadow-lg"
+                                className="bg-blue-600 text-white hover:bg-blue-700 border-none shadow-lg shadow-blue-600/20"
                                 size="lg"
                             >
                                 <Plus className="w-5 h-5 mr-2" />
@@ -215,6 +226,7 @@ const FacultyDashboard = ({ user, isGuest = false }) => {
                                 onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
                                 className="bg-transparent border-none text-sm font-semibold focus:ring-0 text-gray-700 py-2 pl-3 pr-8 cursor-pointer hover:text-primary-600 transition-colors"
                             >
+                                <option value="" disabled>Select Semester</option>
                                 {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].map(s => (
                                     <option key={s} value={s}>Semester {s}</option>
                                 ))}
@@ -225,8 +237,14 @@ const FacultyDashboard = ({ user, isGuest = false }) => {
                                 onChange={(e) => setFilters({ ...filters, section: e.target.value })}
                                 className="bg-transparent border-none text-sm font-semibold focus:ring-0 text-gray-700 py-2 pl-3 pr-8 cursor-pointer hover:text-primary-600 transition-colors"
                             >
+                                <option value="" disabled>Select Section</option>
                                 <option value="A">Section A</option>
                                 <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                                <option value="D">Section D</option>
+                                <option value="E">Section E</option>
+                                <option value="F">Section F</option>
+
                             </select>
                         </div>
 
